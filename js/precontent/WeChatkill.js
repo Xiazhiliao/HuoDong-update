@@ -8481,9 +8481,9 @@ const packs = function () {
                 ai: {
                     order: 0.01,
                     threaten: 1.14,
-                    unequip: true,
+                    unequip_ai: true,
                     skillTagFilter(player, tag, arg) {
-                        if (arg?.card?.storage?.wechatguli) return true;
+                        if (!arg?.card?.storage?.wechatguli) return false;
                     },
                 },
                 locked: false,
@@ -8500,6 +8500,12 @@ const packs = function () {
                         },
                         content() {
                             player.drawTo(player.maxHp);
+                        },
+                        ai: {
+                            unequip: true,
+                            skillTagFilter(player, tag, arg) {
+                                if (!arg?.card?.storage?.wechatguli) return false;
+                            },
                         },
                     },
                 },

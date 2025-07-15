@@ -3258,12 +3258,10 @@ const packs = function () {
                 async cost(event, trigger, player) {
                     const choice = ['摸两张牌', '拿牌摸牌'];
                     const result = await player.chooseControl(choice, 'cancel2').set('ai', () => {
-                        const { player } = get.event(), trigger = get.event().getTrigger();
-                        if ((trigger.cards?.filterInD('od')?.reduce((sum, card) => sum + get.value(card), 0) || 0) > get.effect(player, { name: 'draw' }, player, player)) {
-                            return '拿牌摸牌';
-                        }
-                        return '摸两张牌';
-                    }).set('prompt', get.prompt2('minijianxiong')).forResult();
+                        const { player, controls } = get.event(), trigger = get.event().getTrigger();
+                        if (controls.length === 2 || !trigger.cards?.someInD('od')) return '摸两张牌';
+                        return trigger.cards.filterInD('od').reduce((sum, card) => sum + get.value(card), 0) > get.effect(player, { name: 'draw' }, player, player);
+                    }).set('prompt', get.prompt2(event.skill)).forResult();
                     const control = result.control;
                     event.result = {
                         bool: control && control !== 'cancel2',
