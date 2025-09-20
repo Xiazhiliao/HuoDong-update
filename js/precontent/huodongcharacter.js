@@ -55,7 +55,7 @@ const packs = function () {
             bilibili_xizhicaikobe: ['male', 'key', 4, ['bilibili_biexiao', 'bilibili_xingshi', 'bilibili_zhangcai'], ['doublegroup:wei:shu:wu:qun:jin', 'clan:肘家军|肘击群|活动群', 'name:戏|子宓']],
             bilibili_yanjing: ['male', 'key', 3, ['bilibili_dongxi', 'bilibili_mingcha', 'bilibili_huiyan'], ['clan:宿舍群|肘击群|活动群', 'name:tooenough|眼睛']],
             bilibili_caifuren: ['female', 'qun', 3, ['bilibili_kuilei'], ["name:蔡|null"]],
-            bilibili_nanhualaoxian: ['male', 'qun', 4, ['bilibili_qingshu', 'olshoushu', 'olhedao'], ['die:ol_nanhualaoxian', 'name:庄|周']],
+            bilibili_nanhualaoxian: ['male', 'qun', 4, ['bilibili_qingshu', 'bilibili_shoushu', 'bilibili_hedao'], ['die:ol_nanhualaoxian', 'name:庄|周']],
             bilibili_xiaoyaoruyun: ['female', 'key', 4, ['bilibili_chuandu', 'bilibili_huaikui', 'bilibili_xyduoyang'], ['clan:宿舍群|肘击群|活动群', 'name:鹿都|智川介']],
             bilibili_shuijiaobuboli: ['female', 'key', '3/4', ['bilibili_qicai', 'bilibili_jizhi', 'bilibili_fengliang', 'bilibili_guiyin'], ['clan:宿舍群|活动群', 'name:黄|月英']],
             bilibili_kuailiangkuaiyue: ['male', 'qun', 4, ['bilibili_chouhua'], ['character:kuailiangkuaiyue']],
@@ -3556,18 +3556,12 @@ const packs = function () {
                 audio: 'xinfu_dianhua',
                 trigger: { player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'] },
                 filter(event, player) {
-                    for (var i = 0; i < lib.suit.length; i++) {
-                        if (player.hasMark('xinfu_falu_' + lib.suit[i])) return true;
-                    }
-                    return false;
+                    return lib.suit.some(suit => player.hasMark(`xinfu_falu_${suit}`));
                 },
                 frequent: true,
                 content() {
                     'step 0'
-                    var num = 0;
-                    for (var i = 0; i < lib.suit.length; i++) {
-                        if (player.hasMark('xinfu_falu_' + lib.suit[i])) num++;
-                    }
+                    var num = lib.suit.filter(suit => player.hasMark(`xinfu_falu_${suit}`)).length;
                     var cards = get.cards(num);
                     if (lib.config.extension_十周年UI_enable) {
                         var dialog = decadeUI.content.chooseGuanXing(player, cards, cards.length);
@@ -3644,12 +3638,7 @@ const packs = function () {
                 },
             },
             oldzhenyi: {
-                audio: 'xinfu_zhenyi',
                 inherit: 'xinfu_zhenyi',
-                filter(event, player) {
-                    if (!event.nature) return false;
-                    return player.hasMark('xinfu_falu_diamond');
-                },
                 group: ['oldzhenyi_spade', 'oldzhenyi_club', 'oldzhenyi_heart'],
                 subSkill: {
                     spade: {
@@ -3660,15 +3649,13 @@ const packs = function () {
                         direct: true,
                         content() {
                             'step 0'
-                            var str = get.translation(trigger.player) + '的' + (trigger.judgestr || '') + '判定为' +
-                                get.translation(trigger.player.judging[0]) + '，是否弃置「紫薇♠」标记并修改判定结果？';
-                            player.chooseControl('黑桃5', '红桃5', '取消').set('prompt', get.prompt('oldzhenyi')).set('prompt2', str).set('ai', function () {
-                                var judging = _status.event.judging;
-                                var cards = { name: judging.name, suit: 'spade', number: 5 };
-                                var cardh = { name: judging.name, suit: 'heart', number: 5 };
-                                var results = trigger.judge(cards) - trigger.judge(judging);
-                                var resulth = trigger.judge(cardh) - trigger.judge(judging);
-                                var attitude = get.attitude(player, trigger.player);
+                            var str = `${get.translation(trigger.player)}的${trigger.judgestr || ""}判定为${get.translation(trigger.player.judging[0])}，是否发动【真仪】，失去「紫薇♠」标记并修改判定结果？`;
+                            player.chooseControl('黑桃5', '红桃5', '取消').set('ai', function () {
+                                const { player, judging } = get.event();
+                                const trigger = get.event().getTrigger();
+                                const results = trigger.judge({ name: judging.name, suit: 'spade', number: 5 }) - trigger.judge(judging);
+                                const resulth = trigger.judge({ name: judging.name, suit: 'heart', number: 5 }) - trigger.judge(judging);
+                                const attitude = get.attitude(player, trigger.player);
                                 if (attitude == 0 || (resulth == 0 && results == 0)) return '取消';
                                 if (attitude > 0) {
                                     if (results > 0) {
@@ -3686,7 +3673,7 @@ const packs = function () {
                                     else if (resulth < 0) return '红桃5';
                                     return '取消';
                                 }
-                            }).set('judging', trigger.player.judging[0]);
+                            }).set('judging', trigger.player.judging[0]).set('prompt', get.prompt('oldzhenyi')).set('prompt2', str);
                             'step 1'
                             if (['黑桃5', '红桃5'].includes(result.control)) {
                                 player.removeMark('xinfu_falu_spade');
@@ -3713,6 +3700,8 @@ const packs = function () {
                             if (!player.isDying()) return false;
                             return player.hasMark('xinfu_falu_club') && player.countCards('hs');
                         },
+                        position: 'hs',
+                        prompt: "失去「后土♣」标记，将一张手牌当作【桃】使用",
                     },
                     heart: {
                         audio: 'xinfu_zhenyi',
@@ -3729,7 +3718,7 @@ const packs = function () {
                             return player.hasMark('xinfu_falu_spade') || get.color(ui.cardPile.firstChild) == 'black';
                         },
                         prompt2(event) {
-                            return '弃置「玉清♥」标记，然后进行判定。若结果为黑色，则对' + get.translation(event.player) + '即将造成的伤害+1。';
+                            return '失去「玉清♥」标记，然后进行判定。若结果为黑色，则即将对' + get.translation(event.player) + '造成的伤害+1';
                         },
                         logTarget: 'player',
                         content() {
@@ -6085,43 +6074,44 @@ const packs = function () {
                 onremove: true,
                 intro: { content: '已对$产生怨恨' },
                 audio: 'bolchouyou',
-                trigger: { global: ['useCardBefore', 'respondBefore', 'useSkillBefore'] },
+                trigger: { global: ['useSkill', 'logSkillBegin'] },
                 filter(event, player) {
                     if (!player.getStorage('bolchouyou2').includes(event.player)) return false;
-                    return get.info('bolchouyou2').getFilter(event[(event.name == 'useCard' || event.name == 'respond' || event.name == 'useSkill') ? 'skill' : 'name'], player);
+                    if (!event.player.getSkills(null, false, false).includes(get.sourceSkillFor(event.skill))) return false;
+                    const info = get.info(event.skill);
+                    return info && !info.charlotte && !get.is.locked(event.skill, event.player);
                 },
-                forced: true,
                 logTarget: 'player',
-                content() {
-                    'step 0'
-                    var skill = ((trigger.name == 'useCard' || trigger.name == 'respond' || trigger.name == 'useSkill') ? trigger.skill : trigger.name);
-                    if (get.info(skill).sourceSkill) skill = get.info(skill).sourceSkill;
-                    if (skill.indexOf('_backup') == skill.length - 7) skill = skill.slice(0, skill.length - 7);
-                    player.chooseBool('仇幽：是否同意' + get.translation(trigger.player) + '发动【' + get.translation(skill) + '】?').set('choice', get.attitude(player, trigger.player) > 0);
-                    'step 1'
-                    var skill = ((trigger.name == 'useCard' || trigger.name == 'respond' || trigger.name == 'useSkill') ? trigger.skill : trigger.name);
-                    if (get.info(skill).sourceSkill) skill = get.info(skill).sourceSkill;
-                    player.chat(result.bool ? '同意' : '拒绝');
-                    game.log(player, result.bool ? '#g同意' : '#y拒绝', trigger.player, '发动', '#g【' + get.translation(skill) + '】');
-                    if (!result.bool) {
-                        var info = get.info(skill);
-                        if (info.limited || info.juexingji) trigger.player.restoreSkill(skill);
-                        if (info.usable) {
-                            if (player.storage.counttrigger?.counttrigger[skill]) player.storage.counttrigger[skill]--;
-                            if (player.getStat('skill')[skill]) player.getStat('skill')[skill]--;
+                prompt2(event, player) {
+                    return `阻止${get.translation(event.player)}发动【${get.translation(event.skill)}】`;
+                },
+                check(event, player) {
+                    return get.attitude(player, event.player) < 0;
+                },
+                async content(event, trigger, player) {
+                    trigger.player.tempBanSkill(get.sourceSkillFor(trigger.skill), {
+                        player: ['useCard1', 'useSkillBegin'],
+                        global: ['phaseChange', 'phaseBefore', 'phaseAfter'],
+                    });
+                    player.chat('拒绝');
+                    game.log(player, '#y拒绝', trigger.player, '发动', '#g【' + get.translation(trigger.skill) + '】');
+                    if (trigger.name === 'useSkill') {
+                        if (!trigger._finished) {
+                            trigger.finish();
+                            trigger._triggered = 5;
                         }
-                        trigger.cancel();
-                        if (trigger.name == 'useCard' || trigger.name == 'respond') trigger.getParent().goto(0);
-                        trigger.player.addTempSkill('bolchouyou4', ['phaseBefore', 'phaseChange', 'phaseAfter']);
-                        trigger.player.storage.bolchouyou4.push(skill);
-                        trigger.player.disableSkill('bolchouyou4', trigger.player.storage.bolchouyou4);
+                    }
+                    else {
+                        const evt = trigger.getParent();
+                        if (!evt._finished) {
+                            evt.finish();
+                            evt._triggered = 5;
+                        }
+                        if (['useCard', 'respond'].includes(evt.name) || evt.name.startsWith('pre_')) evt.getParent().goto(0);
+                        evt.next = [];
                     }
                 },
-                group: ['bolchouyou3', 'bolchouyou5'],
-                getFilter(skill, player, info) {
-                    if (skill.indexOf('_') == 0 || !info || info.equipSkill || info.charlotte || info.silent || info.nopop || info.popup === false) return false;
-                    return !lib.skill.global.includes(skill) && !get.is.locked(skill, player);
-                },
+                group: ['bolchouyou3'],
             },
             bolchouyou3: {
                 charlotte: true,
@@ -6133,29 +6123,6 @@ const packs = function () {
                 firstDo: true,
                 content() {
                     player.unmarkAuto('bolchouyou2', [trigger.source]);
-                },
-            },
-            bolchouyou4: {
-                charlotte: true,
-                init(player) {
-                    if (!player.storage.bolchouyou4) player.storage.bolchouyou4 = [];
-                },
-                onremove(player) {
-                    player.enableSkill('bolchouyou4');
-                    delete player.storage.bolchouyou4;
-                },
-            },
-            bolchouyou5: {
-                charlotte: true,
-                trigger: { global: 'logSkillBegin' },
-                filter(event, player) {
-                    const { skill } = event, info = get.info(skill);
-                    return get.info('bolchouyou2').getFilter(skill, player, info);
-                },
-                forced: true,
-                popup: false,
-                content() {
-                    lib.skill.bolchouyou2.trigger.global.push(trigger.skill + 'Before');
                 },
             },
             //张仲景
@@ -8495,60 +8462,6 @@ const packs = function () {
                 },
             },
             yicong_jsp_zhaoyun: { audio: 2 },
-            //NBA宿舍群球员宿舍
-            dom_chouxiang: {
-                dormSkill: true,
-                mod: {
-                    cardUsableTarget(card, player, target) {
-                        if (target != player && target.group == 'mx_dom') return true;
-                    },
-                    targetInRange(card, player, target) {
-                        if (target != player && target.group == 'mx_dom') return true;
-                    },
-                },
-                trigger: { player: ['useCard', 'useSkill', 'logSkillBegin'] },
-                filter(event, player) {
-                    return (event.targets || event.target) && (event.targets || [event.target]).some(i => i != player && i.group == 'mx_dom');
-                },
-                logTarget(event, player) {
-                    return (event.targets || [event.target]).filter(i => i != player && i.group == 'mx_dom');
-                },
-                forced: true,
-                async content(event, trigger, player) {
-                    let loser = [];
-                    const targets = (trigger.targets || [trigger.target]).filter(i => i != player && i.group == 'mx_dom');
-                    const list = [player].concat(targets);
-                    await game.asyncDraw(list);
-                    if (!player.countCards('h') || player.hasSkillTag('noCompareSource')) loser.push(player);
-                    const losers = targets.filter(i => !player.canCompare(i));
-                    loser.addArray(losers);
-                    if (targets.some(i => player.canCompare(i))) {
-                        const { result: { winner } } = await player.chooseToCompare(targets.filter(i => player.canCompare(i)), card => {
-                            return get.number(card);
-                        }).setContent('chooseToCompareMeanwhile');
-                        loser.addArray(list.filter(i => !winner || winner != i));
-                    }
-                    if (loser.length) {
-                        loser.sortBySeat();
-                        player.when({ global: ['useCardAfter', 'useSkillAfter', 'logSkill'] })
-                            .filter(evt => evt == event)
-                            .then(() => {
-                                loser.forEach(i => i.addTempSkill('diaohulishan', 'roundStart'));
-                                var cards = Array.from(ui.ordering.childNodes);
-                                while (cards.length) {
-                                    cards.shift().discard();
-                                }
-                                var evt = _status.event.getParent('phase');
-                                if (evt) {
-                                    game.resetSkills();
-                                    _status.event = evt;
-                                    _status.event.finish();
-                                    _status.event.untrigger(true);
-                                }
-                            }).vars({ loser: loser });
-                    }
-                },
-            },
             //牢狂
             BTmakeBug: {
                 charlotte: true,
@@ -10649,51 +10562,67 @@ const packs = function () {
                     if (!froms?.length) return;
                     const [from] = froms;
                     const ToItems = lib.skill.olhedao.tianshuContent.filter(item => !item.filter || item.filter(from.name));
-                    const tos = await player.chooseButton(['###青书：请选择“天书”效果###<div class="text center">' + from.name + '</div>', [ToItems.randomGets(3).map(item => [item, item.name]), 'textbutton']], true).set('ai', () => 1 + Math.random()).forResult('links');
+                    const tos = await player.chooseButton([`###青书：请选择“天书”效果###<div class="text center">${from.name}</div>`, [ToItems.randomGets(3).map(item => [item, item.name]), 'textbutton']], true).set('ai', () => 1 + Math.random()).forResult('links');
                     if (!tos?.length) return;
                     const [to] = tos;
                     let skill;
                     while (true) {
-                        skill = 'olhedao_tianshu_' + Math.random().toString(36).slice(-8);
+                        skill = `olhedao_tianshu_${Math.random().toString(36).slice(-8)}`;
                         if (!lib.skill[skill]) break;
                     }
                     game.broadcastAll((skill, from, to) => {
                         const { filter: filterFrom, ...otherFrom } = from.effect;
                         const { filter: filterTo, ...otherTo } = to.effect;
-                        lib.skill[skill] = { nopop: true, olhedao: true, charlotte: true, onremove: true, ...otherFrom, ...otherTo };
-                        lib.skill[skill].filter = function (...args) {
-                            return (filterFrom ? filterFrom(...args) : true) && (filterTo ? filterTo(...args) : true);
-                        };
-                        lib.skill[skill].init = (player, skill) => (player.storage[skill] = player.storage[skill] || [0, skill]);
-                        lib.skill[skill].intro = {
-                            markcount: (storage = [0]) => storage[0],
-                            content(storage, player) {
-                                const book = storage?.[1];
-                                if (!book) return '查无此书';
-                                return [
-                                    '此书还可使用' + storage[0] + '次',
-                                    (() => {
-                                        if (!player.isUnderControl(true) && get.info(book)?.nopop) return '未翻开的天书，效果不可见';
-                                        return lib.translate[book + '_info'];
-                                    })(),
-                                ].map(str => '<li>' + str).join('<br>');
+                        lib.skill[skill] = {
+                            nopop: true,
+                            olhedao: true,
+                            charlotte: true,
+                            init(player, skill) {
+                                player.storage[skill] ??= [0, []];
                             },
+                            onremove: true,
+                            filter(...args) {
+                                return (filterFrom ? filterFrom(...args) : true) && (filterTo ? filterTo(...args) : true);
+                            },
+                            markimage: 'image/card/tianshu2.png',
+                            intro: {
+                                markcount: (storage = [0]) => storage[0],
+                                content(storage = [0, []], player, book) {
+                                    const [count, targets] = storage;
+                                    if (!book) return '查无此书';
+                                    return [
+                                        `此书还可使用${count}次`,
+                                        (() => {
+                                            if (!get.info(book)?.nopop || [player, ...targets].some(i => i.isUnderControl(true))) return lib.translate[`${book}_info`];
+                                            return '此书仍是个秘密';
+                                        })(),
+                                    ].map(str => `<li>${str}`).join('<br>');
+                                },
+                            },
+                            ...otherFrom,
+                            ...otherTo,
                         };
-                        lib.skill[skill].markimage = 'image/card/tianshu2.png';
                         lib.translate[skill] = '天书';
-                        lib.translate[skill + '_info'] = from.name + '，' + to.name + '。';
+                        lib.translate[`${skill}_info`] = `${from.name}，${to.name}。`;
                         game.finishSkill(skill);
                     }, skill, from, to);
                     player.addSkill(skill);
                     lib.skill.olhedao.tianshuClear(skill, player, -3);
                     const skills = player.getSkills(null, false, false).filter(skill => get.info(skill)?.olhedao);
-                    const num = skills.length - get.info('olhedao').getLimit(player);
+                    const num = skills.length - lib.skill.olhedao.getLimit(player);
                     if (num > 0) {
-                        const result = num < skills.length ? await player.chooseButton(['青书：选择失去' + get.cnNumber(num) + '册多余的“天书”', [skills.map(item => [item, '（剩余' + player.storage[item][0] + '次）' + lib.translate[item + '_info']]), 'textbutton']], true, num).set('ai', () => 1 + Math.random()).forResult() : { bool: true, links: skills };
+                        const result = num < skills.length ? await player.chooseButton([`青书：选择失去${get.cnNumber(num)}册多余的“天书”`, [skills.map(item => [item, `（剩余${player.storage[item][0]}次）${lib.translate[`${item}_info`]}`]), 'textbutton']], true, num).set('ai', () => 1 + Math.random()).forResult() : { bool: true, links: skills };
                         if (result?.bool && result.links?.length) player.removeSkill(result.links);
                     }
                 },
-                derivation: 'bilibili_qingshu_faq',
+            },
+            bilibili_shoushu: {
+                audio: 'olshoushu',
+                inherit: 'olshoushu',
+            },
+            bilibili_hedao: {
+                audio: 'olhedao',
+                inherit: 'olhedao',
             },
             //逍遥如云
             bilibili_chuandu: {
@@ -11364,7 +11293,7 @@ const packs = function () {
             olddianhua: '点化',
             olddianhua_info: '准备阶段或结束阶段，你可以观看牌堆顶的X张牌（X为你的「紫薇」「后土」「玉清」「勾陈」标记数的总和）。若如此做，你将这些牌以任意顺序放回牌堆顶。',
             oldzhenyi: '真仪',
-            oldzhenyi_info: '你可以在以下时机弃置相应的标记来发动以下效果：一名角色的判定牌生效前，你可以弃置1枚「紫薇」，然后将判定结果改为黑桃5或红桃5；当你处于濒死状态时，你可以弃置1枚「后土」，然后将你的一张手牌当【桃】使用；当你造成伤害时，你可以弃置1枚「玉清」，然后你进行一次判定。若结果为黑色，此伤害+1；当你受到属性伤害后，你可以弃置一张「勾陈」，然后你从牌堆中随机获得三种类型的牌各一张。',
+            oldzhenyi_info: '你可以在以下时机弃置相应的标记来发动以下效果：一名角色的判定牌生效前，你可以失去「紫薇」标记，将判定结果改为黑桃5或红桃5；当你处于濒死状态时，你可以失去「后土」标记，将一张手牌当作【桃】使用；当你造成伤害时，你可以失去「玉清」标记，进行一次判定。若结果为黑色，此伤害+1；当你受到属性伤害后，你可以失去「勾陈」标记，从牌堆中随机获得三种类型的牌各一张。',
             bilibili_fushi: '附势',
             bilibili_fushi_info: '锁定技，若场上势力数：群大于魏，你视为拥有技能〖择主〗；魏大于群，你视为拥有技能〖逞功〗。',
             bilibili_zezhu: '择主',
@@ -11551,14 +11480,14 @@ const packs = function () {
             bolyuanqing: '渊清',
             bolyuanqing_info: '出牌阶段限一次，你可以展示一张手牌，然后其他角色可依次选择是否弃置其中一张颜色与此牌相同的牌并摸一张牌。然后你可以将其中一张弃置的牌置于牌堆顶。',
             bolshuchen: '疏陈',
-            bolshuchen_info: '当一名角色进入濒死状态时，你可以消耗至多3点' + get.RenWangInform() + '并摸等量张牌，然后你可以交给其至多等量张牌。',
+            bolshuchen_info: `当一名角色进入濒死状态时，你可以消耗至多3点${get.poptip('rule_renwangnum')}并摸等量张牌，然后你可以交给其至多等量张牌。`,
             bolxiezheng: '挟政',
-            bolxiezheng_info: '弃牌阶段结束时，你可以消耗1点' + get.RenWangInform() + '并令一名角色弃置X张牌（X为本阶段你弃置的牌数）。',
+            bolxiezheng_info: `弃牌阶段结束时，你可以消耗1点${get.poptip('rule_renwangnum')}并令一名角色弃置X张牌（X为本阶段你弃置的牌数）。`,
             bol_zhangzhongjing: '废案张机',
             bolliaoyi: '疗疫',
             bolliaoyi_info: '出牌阶段开始时，你可以令一名角色获得从牌堆或弃牌堆中获得其上个回合开始至现在失去过的牌的类型的牌各一张。',
             bolbinglun: '病论',
-            bolbinglun_info: '出牌阶段限一次，你可以失去至多3点' + get.RenWangInform() + '，令：⒈等量名角色各选择执行以下一项；⒉一名角色执行以下等量项。①将手牌数补至体力上限（至多摸五张）；②回复1点体力；③防止下一次受到的伤害直到回合开始。',
+            bolbinglun_info: `出牌阶段限一次，你可以失去至多3点${get.poptip('rule_renwangnum')}，令：⒈等量名角色各选择执行以下一项；⒉一名角色执行以下等量项。①将手牌数补至体力上限（至多摸五张）；②回复1点体力；③防止下一次受到的伤害直到回合开始。`,
             bfake_jiananfeng: '蝶设贾南风',
             bfake_jiananfeng_prefix: '蝶设',
             bolduliao: '毒獠',
@@ -11587,9 +11516,6 @@ const packs = function () {
             bolyingtu_info: '①当你的上家于摸牌阶段外获得牌后，你可以获得其等量的牌，然后将等量的牌交给你的下家。②当你的下家使用【杀】或【决斗】指定第一个目标时，若目标角色不包含你和你的上家，则你可以取消此牌的所有目标，然后将此牌目标改为你的上家。',
             bolcongshi: '从势',
             bolcongshi_info: '锁定技。①体力值最大的角色对你的上家和下家使用牌无距离限制。②有角色使用因〖从势①〗增加距离的牌对你的上家或下家造成伤害后，你回复1点体力。',
-            dom_chouxiang: '抽象',
-            dom_chouxiang_info: '锁定技，你对其他宿舍成员使用牌无距离和次数限制；当你使用牌或发动技能时，若其中包含其他宿舍成员，则你和这些角色各摸一张牌，然后进行同时拼点，不能拼点和拼点没赢的角色于此牌或技能结算完毕后于本轮移出游戏。',
-            dom_chouxiang_append: '<span style="font-family:yuanli">抽象对抽象，不抽象的陪' + get.bolInformX('牢大', '仅娱乐，请勿过度解读') + '打复活赛</span>',
             'bilibili_kuangshen04': '狂神',
             BTmakeBug: 'PR',
             BTmakeBug_info: '锁定技，回合结束时，你将手牌数摸至七张，然后若你没有手牌，你结束本局游戏，否则你随机伪装你的一张手牌的花色点数，然后X须猜测其中哪一张为此伪装牌，若X猜错，你获得两张【影】，然后在牌堆中洗入20张【影】（洗入的【影】无花色且点数为114514，X为game.me，若game.me与你同阵容或game.me未存活则改为随机一名敌方角色）。',
@@ -11724,9 +11650,15 @@ const packs = function () {
             bolshicai_effect: '牌堆顶',
             bolshicai_info: '出牌阶段，牌堆顶的一张牌对你可见。你可以弃置一张牌，然后获得牌堆顶的一张牌，且不能再发动〖恃才〗直到此牌离开你的手牌区。',
             bilibili_nanhualaoxian: '南华老仙',
-            bilibili_qingshu: '青书',
-            bilibili_qingshu_faq: '关于天书',
-            bilibili_qingshu_faq_info: '<br>书写“天书”时，系统先从30个“天书”时机中随机筛选出三个，角色选择时机后，系统再从30个“天书”效果中随机筛选出三个可以和选择的时机匹配的效果，然后角色获得技能为你选择的“天书”时机+“天书”效果的〖天书〗，此技能被发动前对其余玩家不可见，发动三次时失去此〖天书〗。',
+            bilibili_hedao_faq: '“天书”',
+            bilibili_hedao_faq_info: '关于“天书”：<br>' + [
+                '“天书”为随机三个时机和三个效果中各选择一个组成的技能，一名角色可至多拥有一册“天书”',
+                '“天书”初始为未翻开状态，发动一次后翻开此“天书”（未翻开的“天书”技能对其他角色不可见）',
+                '“天书”至多可发动三次，交给其他角色后至多可发动一次，“天书”次数用尽后失去此“天书”',
+            ].map(str => `<li>${str}`).join('<br>'),
+            bilibili_qingshu_info: `锁定技，游戏开始时/准备阶段/结束阶段，你书写一册${get.poptip("bilibili_hedao_faq")}。`,
+            bilibili_shoushu_info: `出牌阶段限一次，你可以将一册未翻开的${get.poptip("bilibili_hedao_faq")}交给一名其他角色。`,
+            bilibili_hedao_info: `锁定技。①游戏开始时，你可至多拥有两册${get.poptip("bilibili_hedao_faq")}。②你的首次濒死结算后，你可至多拥有三册${get.poptip("bilibili_hedao_faq")}。`,
             bilibili_xiaoyaoruyun: '逍遥如云',
             bilibili_chuandu: '传毒',
             bilibili_chuandu_info: '锁定技，准备阶段/结束阶段，你令你与场上所有拥有“染”标记的相邻其他角色获得“染”标记，然后你摸一张牌/拥有“染”标记的角色各失去1点体力。',

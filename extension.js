@@ -13,12 +13,13 @@ game.bolShowNewPack = function () {
 	var HuoDong_update = [
 		'/setPlayer/',
 		'bugfix',
-		'新武将：玄蝶祢衡、喵曹婴、葛玄、界曹叡、旧董翓',
+		'重新分配微信三国杀的武将分包',
+		'重新添加微信赵云，并单独增加微信界赵云',
 		'To be continued...',
 	];
 	//更新武将
 	var HuoDong_players = [
-		'bfake_miheng', 'Mmiao_caoying', 'Mbaby_gexuan', 'Mbaby_caorui', 'old_dongxie',
+		'wechat_zhaoyun', 'wechat_re_zhaoyun',
 	];
 	//加载
 	var dialog = ui.create.dialog(
@@ -56,7 +57,7 @@ game.bolShowNewPack = function () {
 };
 
 let extensionPackage = {
-	name: "活动武将",
+	name: '活动武将',
 	editable: false,
 	content: content,
 	precontent: precontent,
