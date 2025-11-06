@@ -18,15 +18,6 @@ export async function content(config, pack) {
 			return result;
 		};
 	}
-	//更新公告
-	var version = lib.config.extension_活动武将_HDversion;
-	if (!version || version != lib.extensionPack.活动武将.version) {
-		lib.game.showChangeLog = function () {
-			game.saveConfig('extension_活动武将_HDversion', lib.extensionPack.活动武将.version);
-			game.bolShowNewPack();
-			lib.init.onfree();
-		};
-	}
 
 	//快捷添加/删除武将
 	game.HDdeleteCharacter = function (name) {
@@ -105,22 +96,6 @@ export async function content(config, pack) {
 				});
 			}
 		}
-	}
-
-	//Hidden--作者专属
-	if (lib.config.connect_nickname == '萌新（转型中）') {
-		lib.extensionMenu['extension_活动武将'].FenJieXianAuthor = {
-			name: '<li>作者专属',
-			clear: true,
-		};
-		//检查公告
-		lib.extensionMenu['extension_活动武将'].HDcheckNew = {
-			name: '检查更新公告',
-			clear: true,
-			onclick() {
-				game.bolShowNewPack();
-			},
-		};
 	}
 
 	//官方武将包保护机制
@@ -1068,12 +1043,20 @@ export async function content(config, pack) {
 		if (!Array.isArray(list)) list = [list];
 		skills.forEach(skill => {
 			if (!lib.skill[skill]) return;
-			if (!lib.skill[skill].audioname) lib.skill[skill].audioname = [];
+			lib.skill[skill].audioname ??= [];
 			lib.skill[skill].audioname.addArray(list);
+			if (lib.skill[skill].subSkill) {
+				for (const skill2 in lib.skill[skill].subSkill) {
+					if (lib.skill[skill2]?.audio === skill) {
+						lib.skill[skill2].audioname ??= [];
+						lib.skill[skill2].audioname.addArray(list);
+					}
+				}
+			}
 		});
 	};
-	game.HDsetAudioname(['dchuishu', 'dcyishu', 'yingzi', 'biyue'], 'bilibili_zhouxiaomei');
-	lib.skill.dchuishu.subSkill.effect.audioname = (lib.skill.dchuishu.subSkill.effect.audioname || []).concat(['bilibili_zhouxiaomei']);
+	game.HDsetAudioname(get.character('bilibili_zhoutaigong').skills, 'bilibili_zhoutaigong');
+	game.HDsetAudioname(get.character('bilibili_zhouxiaomei').skills, 'bilibili_zhouxiaomei');
 	game.HDsetAudioname('yijin', 'bilibili_litiansuo');
 	game.HDsetAudioname(['reqimou', 'zhaxiang', 'zhaxiang2', 'tairan', 'tairan2'], 'bilibili_kuangshen04');
 
