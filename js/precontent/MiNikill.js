@@ -376,7 +376,7 @@ const packs = function () {
                 group: 'shen',
                 hp: 3,
                 hp2: 3,
-                skills: ['minishuangshu1', 'minishutu1', 'minitongxin'],
+                skills: ['minishuangshu1', 'minishutu1', 'minitongdi'],
                 groupInGuozhan: 'wu',
                 names: '桥|null-桥|null',
             },
@@ -7199,6 +7199,63 @@ const packs = function () {
                         nobracket: true,
                         intro: { content: '若你有空置的武器栏，则你视为装备【诸葛连弩】' },
                         group: 'minireguanxing_zhuge',
+                        init(player, skill) {
+                            if (!_status[`${skill}_virtualEquipped`]) {
+                                game.broadcastAll(skill => {
+                                    _status[`${skill}_virtualEquipped`] = lib.element.player.$handleEquipChange;
+                                    lib.element.player.$handleEquipChange = function () {
+                                        _status[`${skill}_virtualEquipped`].apply(this, arguments);
+                                        let player = this, equip = false, str = `${get.translation(skill)} ${get.translation(lib.skill[skill].group.split('_')[1])}`;
+                                        if (player.hasSkill(skill)) {
+                                            for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                                const card = player.node.equips.childNodes[j];
+                                                if (card.name === 'empty_equip1' && (card.classList.contains('hidden') || card.node.name2.innerHTML === str)) {
+                                                    equip = true;
+                                                    card.node.name2.innerHTML = str;
+                                                    card.classList.remove('hidden');
+                                                    break;
+                                                }
+                                            }
+                                            if (!equip && player.hasEmptySlot(1)) {
+                                                const card = game.createCard('empty_equip1', '', '');
+                                                card.fix();
+                                                card.style.transform = '';
+                                                card.classList.remove('drawinghidden');
+                                                card.classList.add('emptyequip');
+                                                card.node.name2.innerHTML = str;
+                                                delete card._transform;
+                                                const equipNum = get.equipNum(card);
+                                                let equipped = false;
+                                                for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                                    if (get.equipNum(player.node.equips.childNodes[j]) >= equipNum) {
+                                                        player.node.equips.insertBefore(card, player.node.equips.childNodes[j]);
+                                                        equipped = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (!equipped) {
+                                                    player.node.equips.appendChild(card);
+                                                    if (_status.discarded) _status.discarded.remove(card);
+                                                }
+                                            }
+                                        }
+                                    };
+                                }, skill);
+                            }
+                            setTimeout(() => player.$handleEquipChange());
+                        },
+                        onremove(player, skill) {
+                            game.broadcastAll((player, skill) => {
+                                for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                    const card = player.node.equips.childNodes[j];
+                                    if (card.name === 'empty_equip1' && card.node.name2.innerHTML === `${get.translation(skill)} ${get.translation(lib.skill[skill].group.split('_')[1])}`) {
+                                        card.classList.add('hidden');
+                                        break;
+                                    }
+                                }
+                            }, player, skill);
+                            setTimeout(() => player.$handleEquipChange());
+                        },
                     },
                     zhuge: {
                         inherit: 'zhuge_skill',
@@ -10081,6 +10138,63 @@ const packs = function () {
                 content() {
                     player.draw();
                 },
+                init(player, skill) {
+                    if (!_status[`${skill}_virtualEquipped`]) {
+                        game.broadcastAll(skill => {
+                            _status[`${skill}_virtualEquipped`] = lib.element.player.$handleEquipChange;
+                            lib.element.player.$handleEquipChange = function () {
+                                _status[`${skill}_virtualEquipped`].apply(this, arguments);
+                                let player = this, equip = false, str = `${get.translation(skill)} ${get.translation(lib.skill[skill].group.split('_')[1])}`;
+                                if (player.hasSkill(skill)) {
+                                    for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                        const card = player.node.equips.childNodes[j];
+                                        if (card.name === 'empty_equip2' && (card.classList.contains('hidden') || card.node.name2.innerHTML === str)) {
+                                            equip = true;
+                                            card.node.name2.innerHTML = str;
+                                            card.classList.remove('hidden');
+                                            break;
+                                        }
+                                    }
+                                    if (!equip && player.hasEmptySlot(2)) {
+                                        const card = game.createCard('empty_equip2', '', '');
+                                        card.fix();
+                                        card.style.transform = '';
+                                        card.classList.remove('drawinghidden');
+                                        card.classList.add('emptyequip');
+                                        card.node.name2.innerHTML = str;
+                                        delete card._transform;
+                                        const equipNum = get.equipNum(card);
+                                        let equipped = false;
+                                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                            if (get.equipNum(player.node.equips.childNodes[j]) >= equipNum) {
+                                                player.node.equips.insertBefore(card, player.node.equips.childNodes[j]);
+                                                equipped = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!equipped) {
+                                            player.node.equips.appendChild(card);
+                                            if (_status.discarded) _status.discarded.remove(card);
+                                        }
+                                    }
+                                }
+                            };
+                        }, skill);
+                    }
+                    setTimeout(() => player.$handleEquipChange());
+                },
+                onremove(player, skill) {
+                    game.broadcastAll((player, skill) => {
+                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                            const card = player.node.equips.childNodes[j];
+                            if (card.name === 'empty_equip2' && card.node.name2.innerHTML === `${get.translation(skill)} ${get.translation(lib.skill[skill].group.split('_')[1])}`) {
+                                card.classList.add('hidden');
+                                break;
+                            }
+                        }
+                    }, player, skill);
+                    setTimeout(() => player.$handleEquipChange());
+                },
             },
             minihuoji: {
                 audio: 'huoji',
@@ -10282,7 +10396,7 @@ const packs = function () {
                     const { result } = await player.chooseButton([
                         `扶汉：请选择获得至多两个技能`,
                         [dialog => {
-                            dialog.css({ top: '25%' });
+                            dialog.css({ top: get.is.phoneLayout() ? '20%' : '25%' });
                             const { characterMap } = get.event();
                             for (const name of Object.keys(map)) {
                                 const table = document.createElement('div');
@@ -11000,8 +11114,6 @@ const packs = function () {
                 },
             },
             minidaopu: {
-                derivation: 'qinglong_skill',
-                group: 'wechatqinglong',
                 mod: {
                     aiOrder(player, card, num) {
                         if (!player.getEquip('qinglong')) return;
@@ -11012,6 +11124,87 @@ const packs = function () {
                 filter(event, player) {
                     if (!player.getEquip('qinglong')) return false;
                     return event.card && event.card.name == 'sha' && get.color(event.card) == 'red' && event.notLink();
+                },
+                group: 'minidaopu_qinglong',
+                init(player, skill) {
+                    if (!_status[`${skill}_virtualEquipped`]) {
+                        game.broadcastAll(skill => {
+                            _status[`${skill}_virtualEquipped`] = lib.element.player.$handleEquipChange;
+                            lib.element.player.$handleEquipChange = function () {
+                                _status[`${skill}_virtualEquipped`].apply(this, arguments);
+                                let player = this, equip = false, str = `${get.translation(skill)} ${get.translation(lib.skill[skill].group.split('_')[1])}`;
+                                if (player.hasSkill(skill)) {
+                                    for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                        const card = player.node.equips.childNodes[j];
+                                        if (card.name === 'empty_equip1' && (card.classList.contains('hidden') || card.node.name2.innerHTML === str)) {
+                                            equip = true;
+                                            card.node.name2.innerHTML = str;
+                                            card.classList.remove('hidden');
+                                            break;
+                                        }
+                                    }
+                                    if (!equip && player.hasEmptySlot(1)) {
+                                        const card = game.createCard('empty_equip1', '', '');
+                                        card.fix();
+                                        card.style.transform = '';
+                                        card.classList.remove('drawinghidden');
+                                        card.classList.add('emptyequip');
+                                        card.node.name2.innerHTML = str;
+                                        delete card._transform;
+                                        const equipNum = get.equipNum(card);
+                                        let equipped = false;
+                                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                            if (get.equipNum(player.node.equips.childNodes[j]) >= equipNum) {
+                                                player.node.equips.insertBefore(card, player.node.equips.childNodes[j]);
+                                                equipped = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!equipped) {
+                                            player.node.equips.appendChild(card);
+                                            if (_status.discarded) _status.discarded.remove(card);
+                                        }
+                                    }
+                                }
+                            };
+                        }, skill);
+                    }
+                    setTimeout(() => player.$handleEquipChange());
+                },
+                onremove(player, skill) {
+                    game.broadcastAll((player, skill) => {
+                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                            const card = player.node.equips.childNodes[j];
+                            if (card.name === 'empty_equip1' && card.node.name2.innerHTML === `${get.translation(skill)} ${get.translation(lib.skill[skill].group.split('_')[1])}`) {
+                                card.classList.add('hidden');
+                                break;
+                            }
+                        }
+                    }, player, skill);
+                    setTimeout(() => player.$handleEquipChange());
+                },
+                subSkill: {
+                    qinglong: {
+                        mod: {
+                            attackRange(player, num) {
+                                if (player.hasEmptySlot(1)) return num + 2;
+                            },
+                        },
+                        audio: 'qinglong_skill',
+                        trigger: { player: ['shaMiss', 'eventNeutralized'] },
+                        filter(event, player) {
+                            if (!player.hasEmptySlot(1) || !event.card || event.card.name != 'sha') return false;
+                            return event.target.isIn() && player.canUse('sha', event.target, false) && (player.hasSha() || _status.connectMode && player.countCards('h'));
+                        },
+                        direct: true,
+                        locked: true,
+                        content() {
+                            player.chooseToUse(get.prompt('qinglong', trigger.target), function (card, player, event) {
+                                if (get.name(card) != 'sha') return false;
+                                return lib.filter.filterCard.apply(this, arguments);
+                            }, trigger.target, -1).set('addCount', false).logSkill = event.name;
+                        },
+                    },
                 },
             },
             //吕凯
@@ -19554,7 +19747,7 @@ const packs = function () {
                     const { result } = await player.chooseButton([
                         `###离宫###<div class="text center">请选择获得至多两个技能，或点击“取消”摸三张牌`,
                         [dialog => {
-                            dialog.css({ top: '20%' });
+                            dialog.css({ top: get.is.phoneLayout() ? '20%' : '25%' });
                             const { characterMap } = get.event();
                             for (const name of Object.keys(map)) {
                                 const table = document.createElement('div');
@@ -22997,6 +23190,63 @@ const packs = function () {
                         if (type == 'trick' || type == 'delay') return true;
                     },
                 },
+                init(player, skill) {
+                    if (!_status[`${skill}_virtualEquipped`]) {
+                        game.broadcastAll(skill => {
+                            _status[`${skill}_virtualEquipped`] = lib.element.player.$handleEquipChange;
+                            lib.element.player.$handleEquipChange = function () {
+                                _status[`${skill}_virtualEquipped`].apply(this, arguments);
+                                let player = this, equip = false, str = `${get.translation(skill)} ${get.translation(lib.skill[skill].group[0].split('_')[1])}`;
+                                if (player.hasSkill(skill)) {
+                                    for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                        const card = player.node.equips.childNodes[j];
+                                        if (card.name === 'empty_equip2' && (card.classList.contains('hidden') || card.node.name2.innerHTML === str)) {
+                                            equip = true;
+                                            card.node.name2.innerHTML = str;
+                                            card.classList.remove('hidden');
+                                            break;
+                                        }
+                                    }
+                                    if (!equip && player.hasEmptySlot(2)) {
+                                        const card = game.createCard('empty_equip2', '', '');
+                                        card.fix();
+                                        card.style.transform = '';
+                                        card.classList.remove('drawinghidden');
+                                        card.classList.add('emptyequip');
+                                        card.node.name2.innerHTML = str;
+                                        delete card._transform;
+                                        const equipNum = get.equipNum(card);
+                                        let equipped = false;
+                                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                            if (get.equipNum(player.node.equips.childNodes[j]) >= equipNum) {
+                                                player.node.equips.insertBefore(card, player.node.equips.childNodes[j]);
+                                                equipped = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!equipped) {
+                                            player.node.equips.appendChild(card);
+                                            if (_status.discarded) _status.discarded.remove(card);
+                                        }
+                                    }
+                                }
+                            };
+                        }, skill);
+                    }
+                    setTimeout(() => player.$handleEquipChange());
+                },
+                onremove(player, skill) {
+                    game.broadcastAll((player, skill) => {
+                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                            const card = player.node.equips.childNodes[j];
+                            if (card.name === 'empty_equip2' && card.node.name2.innerHTML === `${get.translation(skill)} ${get.translation(lib.skill[skill].group[0].split('_')[1])}`) {
+                                card.classList.add('hidden');
+                                break;
+                            }
+                        }
+                    }, player, skill);
+                    setTimeout(() => player.$handleEquipChange());
+                },
             },
             minilinglong_jizhi: {
                 audio: 'rejizhi',
@@ -24178,6 +24428,63 @@ const packs = function () {
                 audio: 'ext:活动武将/audio/skill:true',
                 derivation: 'miniruyi_jingubang',
                 group: ['miniruyi_jingubang', 'miniruyi_jingubang2'],
+                init(player, skill) {
+                    if (!_status[`${skill}_virtualEquipped`]) {
+                        game.broadcastAll(skill => {
+                            _status[`${skill}_virtualEquipped`] = lib.element.player.$handleEquipChange;
+                            lib.element.player.$handleEquipChange = function () {
+                                _status[`${skill}_virtualEquipped`].apply(this, arguments);
+                                let player = this, equip = false, str = `${get.translation(skill)} ${get.translation(lib.skill[skill].derivation)}`;
+                                if (player.hasSkill(skill)) {
+                                    for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                        const card = player.node.equips.childNodes[j];
+                                        if (card.name === 'empty_equip1' && (card.classList.contains('hidden') || card.node.name2.innerHTML === str)) {
+                                            equip = true;
+                                            card.node.name2.innerHTML = str;
+                                            card.classList.remove('hidden');
+                                            break;
+                                        }
+                                    }
+                                    if (!equip && player.hasEmptySlot(1)) {
+                                        const card = game.createCard('empty_equip1', '', '');
+                                        card.fix();
+                                        card.style.transform = '';
+                                        card.classList.remove('drawinghidden');
+                                        card.classList.add('emptyequip');
+                                        card.node.name2.innerHTML = str;
+                                        delete card._transform;
+                                        const equipNum = get.equipNum(card);
+                                        let equipped = false;
+                                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                                            if (get.equipNum(player.node.equips.childNodes[j]) >= equipNum) {
+                                                player.node.equips.insertBefore(card, player.node.equips.childNodes[j]);
+                                                equipped = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!equipped) {
+                                            player.node.equips.appendChild(card);
+                                            if (_status.discarded) _status.discarded.remove(card);
+                                        }
+                                    }
+                                }
+                            };
+                        }, skill);
+                    }
+                    setTimeout(() => player.$handleEquipChange());
+                },
+                onremove(player, skill) {
+                    game.broadcastAll((player, skill) => {
+                        for (let j = 0; j < player.node.equips.childNodes.length; j++) {
+                            const card = player.node.equips.childNodes[j];
+                            if (card.name === 'empty_equip1' && card.node.name2.innerHTML === `${get.translation(skill)} ${get.translation(lib.skill[skill].derivation)}`) {
+                                card.classList.add('hidden');
+                                break;
+                            }
+                        }
+                    }, player, skill);
+                    setTimeout(() => player.$handleEquipChange());
+                },
                 ai: {
                     effect: {
                         target(card, player, target) {
@@ -31785,21 +32092,22 @@ const packs = function () {
                     },
                 },
             },
-            minitongxin: {
+            minitongdi: {
                 audio: 'miniyizheng',
                 trigger: { global: ['recoverEnd', 'damageEnd', 'loseHpEnd'] },
                 filter(event, player) {
                     if (event.source !== player) return false;
                     const evt = event.getParent(2);
                     if (!(event.getParent().type === 'card' && evt.name === 'useCard' && evt.player === player && get.color(evt.card) === 'red')) return false;
-                    return (player.getHp() === Math.max(0, player.hp2) && player.isDamaged()) || (player.countCards('h', { suit: 'heart' }) === player.countCards('h', { suit: 'diamond' }) && player.hasCard(card => {
+                    if (typeof player.hp2 === 'number' && player.getHp() === Math.max(0, player.hp2) && player.isDamaged()) return true;
+                    return player.countCards('h', { suit: 'heart' }) === player.countCards('h', { suit: 'diamond' }) && player.hasCard(card => {
                         if (_status.connectMode && get.color(card) === 'h') return true;
                         return lib.filter.cardDiscardable(card, player);
-                    }, 'h'));
+                    }, 'h');
                 },
                 direct: true,
                 async content(event, trigger, player) {
-                    if (player.getHp() === Math.max(0, player.hp2) && player.isDamaged()) {
+                    if (typeof player.hp2 === 'number' && player.getHp() === Math.max(0, player.hp2) && player.isDamaged()) {
                         const result = await player.chooseBool(`${get.translation(event.name)}：是否回复1点体力？`).set('choice', get.recoverEffect(player, player, player) > 0).forResult();
                         if (result?.bool) {
                             player.logSkill(event.name);
@@ -37870,6 +38178,18 @@ const packs = function () {
                 let start = '转换技。①游戏开始时，你可以转换此技能状态；', end = '。';
                 return `${start}阳：${yang}；阴：${yin}${end}`;
             },
+            minishuangshu1(player, skill) {
+                if (typeof player.hp2 === 'number') return lib.translate[`${skill}_info`];
+                return '锁定技。回合开始时，你执行一个额外的摸牌阶段。';
+            },
+            minishutu1(player, skill) {
+                if (typeof player.hp2 === 'number') return lib.translate[`${skill}_info`];
+                return '当你回复体力后，你可以从牌堆或弃牌堆获得两张指定花色的红色牌。';
+            },
+            minitongdi(player, skill) {
+                if (typeof player.hp2 === 'number') return lib.translate[`${skill}_info`];
+                return '当你使用红色牌令一名角色的体力值变化后，若你手牌中的红桃牌和方片牌的数量相同，则你可以弃置一张红色牌，对一名角色造成1点伤害。';
+            },
         },
         translate: {
             MiNi_wei: '欢乐三国杀·魏国',
@@ -38343,7 +38663,6 @@ const packs = function () {
             miniguanxing: '观星',
             miniguanxing_info: '准备阶段，你可以观看牌堆顶的X张牌（场上人数不大于2时X为3，否则X为5）并可以调整这些牌于牌堆顶或牌堆底。若你将所有牌置于牌堆底，则你可以于结束阶段再次发动〖观星〗。',
             minireguanxing: '观星',
-            minireguanxing_liannu: '诸葛连弩',
             minireguanxing_zhuge: '诸葛连弩',
             minireguanxing_info: '①准备阶段和结束阶段，你可以观看牌堆顶的X张牌并可以调整这些牌于牌堆顶或牌堆底，若你的“星”小于X张，你可以将其中一张牌称为“星”置于你的武将牌上。②出牌阶段，你可以获得你武将牌上的所有“星”，若这些牌不小于X张，则你本回合获得如下效果：若你有空置的装备栏，则你视为装备【诸葛连弩】。（X为5，场上人数不大于2时X为3）',
             minikongcheng: '空城',
@@ -39581,8 +39900,8 @@ const packs = function () {
             minishuangshu1_info: '锁定技。①回合开始时，你执行一个额外的摸牌阶段。②你拥有“大乔”和“小乔”两段体力，当你执行体力和体力上限的变化时，你选择“大乔”或“小乔”执行此操作，“大乔”或“小乔”阵亡即你阵亡。',
             minishutu1: '殊途',
             minishutu1_info: '①大乔回复体力后，你可以从牌堆或弃牌堆获得两张指定花色的红色牌。②小乔受到伤害后，你可以使用一张牌（无次数限制且不可被响应）。',
-            minitongxin: '同心',
-            minitongxin_info: '当你使用红色牌令一名角色的体力值变化后，你依次执行：①若大乔和小乔的体力值相同，则你可以回复1点体力；②若你手牌中的红桃牌和方片牌的数量相同，则你可以弃置一张红色牌，对一名角色造成1点伤害。',
+            minitongdi: '同蒂',
+            minitongdi_info: '当你使用红色牌令一名角色的体力值变化后，你依次执行：①若大乔和小乔的体力值相同，则你可以回复1点体力；②若你手牌中的红桃牌和方片牌的数量相同，则你可以弃置一张红色牌，对一名角色造成1点伤害。',
             minishuangshu2: '双姝',
             minishuangshu2_info: '转换技。①游戏开始时，你可以转换此技能状态；②阳：当你使用或打出一张方片牌后，你摸X张牌（X为你装备区的红色牌数）；阴：当你使用或打出一张红桃牌后，你可以弃置一张牌，然后从牌堆或弃牌堆获得两张与此牌花色不同的牌。',
             miniyizheng2: '移筝',
@@ -39637,7 +39956,7 @@ const packs = function () {
             })(),
             minihuanhua: '幻化',
             minihuanhua_tag: '已选择',
-            minihuanhua_info: '出牌阶段限两次，出牌阶段，你可选择一张未被〖幻化〗定向转化过的“幻术”牌和一张未被〖幻化〗选择过的非“幻术”牌，你将前者的牌名、属性、花色和点数转化为和后者一致，若两张牌的花色相同，你获得一张“幻术”牌。',
+            minihuanhua_info: '出牌阶段限两次，你可选择一张未被〖幻化〗定向转化过的“幻术”牌和一张未被〖幻化〗选择过的非“幻术”牌，你将前者的牌名、属性、花色和点数转化为和后者一致，若两张牌的花色相同，你获得一张“幻术”牌。',
             minihuanjing: '幻境',
             minihuanjing_info: '限定技，出牌阶段，你可令本回合发动〖幻化〗的次数+X且你发动〖幻化〗可以选择“幻术”牌为转化目标卡牌，然后你获得X张“幻术”牌。（X为你已损失的体力值的两倍且X至少为1）',
             minixianjin: '险进',
@@ -39896,50 +40215,38 @@ const packs = function () {
         const ori1 = lib.element.player.init;
         lib.element.player.init = function (character, character2) {
             const player = this;
-            if (lib.character[character].hp2 || lib.character[character2]?.hp2) {
-                let hp1 = 0, hp2 = 0, maxHp1 = 0, maxHp2 = 0;
-                if (lib.character[character].hp2) {
-                    hp1 = lib.character[character].hp2;
-                    maxHp1 = lib.character[character].maxHp2 || lib.character[character].hp2;
-                }
-                if (lib.character[character2]?.hp2) {
-                    hp2 = lib.character[character2].hp2;
-                    maxHp2 = lib.character[character2].maxHp2 || lib.character[character2].hp2;
-                }
-                if (lib.character[character].hp2 && lib.character[character2]?.hp2) {
+            if (lib.character[character]?.hp2 || lib.character[character2]?.hp2) {
+                let hp1 = 0, hp2 = 0;
+                if (lib.character[character]?.hp2) hp1 = lib.character[character].hp2;
+                if (lib.character[character2]?.hp2) hp2 = lib.character[character2].hp2;
+                if (lib.character[character]?.hp2 && lib.character[character2]?.hp2) {
                     let double_hp;
                     if (_status.connectMode || get.mode() === 'single' && _status.mode === 'changban') double_hp = 'pingjun';
                     else double_hp = get.config('double_hp');
                     switch (double_hp) {
                         case 'pingjun': {
-                            this.maxHp2 = Math.floor((maxHp1 + maxHp2) / 2);
                             this.hp2 = Math.floor((hp1 + hp2) / 2);
                             break;
                         }
                         case 'zuidazhi': {
-                            this.maxHp2 = Math.max(maxHp1, maxHp2);
                             this.hp2 = Math.max(hp1, hp2);
                             break;
                         }
                         case 'zuixiaozhi': {
-                            this.maxHp2 = Math.min(maxHp1, maxHp2);
                             this.hp2 = Math.min(hp1, hp2);
                             break;
                         }
                         case 'zonghe': {
-                            this.maxHp2 = maxHp1 + maxHp2;
                             this.hp2 = hp1 + hp2;
                             break;
                         }
                         default: {
-                            this.maxHp2 = maxHp1 + maxHp2 - 3;
                             this.hp2 = hp1 + hp2 - 3;
                         }
                     }
                 }
                 else {
-                    this.maxHp2 = lib.character[character].hp2 ? maxHp1 : maxHp2;
-                    this.hp2 = lib.character[character].hp2 ? hp1 : hp2;
+                    this.hp2 = lib.character[character]?.hp2 ? hp1 : hp2;
                 }
             }
             return ori1.apply(this, arguments);
@@ -39947,15 +40254,14 @@ const packs = function () {
         const ori2 = lib.element.player.uninit;
         lib.element.player.uninit = function () {
             delete this.hp2;
-            delete this.maxHp2;
-            this.node.hp2?.remove();
             return ori2.apply(this, arguments);
         };
         const ori3 = lib.element.player.$update;
         lib.element.player.$update = function () {
             const player = ori3.apply(this, arguments);
-            if (typeof player.hp2 === 'number' || typeof player.maxHp2 === 'number') {
-                if (player.hp2 >= player.maxHp2) player.hp2 = player.maxHp2;
+            if (typeof player.hp2 === 'number') {
+                if (_status.event?.name === 'chooseCharacter') player.hp2++;
+                if (player.hp2 >= player.maxHp) player.hp2 = player.maxHp;
                 if (!player.storage.nohp) {
                     const hp = player.node.hp;
                     hp.style.transition = 'none';
@@ -39972,7 +40278,7 @@ const packs = function () {
                         span.textContent = str;
                         return span.outerHTML;
                     };
-                    hp.innerHTML = `${getStr(getNum(player.hp2))}${getStr('/')}${getStr(getNum(player.maxHp2))}<div></div><br>${getStr(getNum(player.hp))}${getStr('/')}${getStr(getNum(player.maxHp))}<div></div>`;
+                    hp.innerHTML = `${getStr(getNum(player.hp2))}${getStr('/')}${getStr(getNum(player.maxHp))}<div></div><br>${getStr(getNum(player.hp))}${getStr('/')}${getStr(getNum(player.maxHp))}<div></div>`;
                     if (player.hp === 0 || player.hp2 === 0) hp.lastChild.classList.add('lost');
                     hp.classList.add('textstyle');
                     setTimeout(() => hp.style.transition = '');
@@ -39989,14 +40295,14 @@ const packs = function () {
             return Math.max(0, num);
         };
         lib.element.player.isDamaged = function () {
-            return (this.hp < this.maxHp || (typeof this.hp2 === 'number' && this.hp2 < this.maxHp2)) && !this.storage.nohp;
+            return (this.hp < this.maxHp || (typeof this.hp2 === 'number' && this.hp2 < this.maxHp)) && !this.storage.nohp;
         };
         lib.element.player.isHealthy = function () {
-            return (this.hp >= this.maxHp && (typeof this.hp2 !== 'number' || this.hp2 >= this.maxHp2)) || this.storage.nohp;
+            return (this.hp >= this.maxHp && (typeof this.hp2 !== 'number' || this.hp2 >= this.maxHp)) || this.storage.nohp;
         };
         lib.element.content.recover = function () {
             let list = [player.maxHp - player.hp];
-            if (typeof player.hp2 === 'number') list.push(player.maxHp2 - player.hp2);
+            if (typeof player.hp2 === 'number') list.push(player.maxHp - player.hp2);
             event.num = num = Math.min(num, Math.max(...list));
             if (num > 0) {
                 delete event.filterStop;
@@ -40013,7 +40319,7 @@ const packs = function () {
         const ori5 = lib.element.player.getDamagedHp;
         lib.element.player.getDamagedHp = function () {
             const num = ori5.apply(this, arguments);
-            if (typeof this.hp2 === 'number' && this.hp2 < this.maxHp2) num += this.maxHp2 - this.hp2;
+            if (typeof this.hp2 === 'number' && this.hp2 < this.maxHp) num += this.maxHp - this.hp2;
             return num;
         };
         lib.element.content.changeHp = async function (event, trigger, player) {
@@ -40032,8 +40338,8 @@ const packs = function () {
                     if (_status.dying.includes(player) && (player.hp <= 0 !== player.hp2 <= 0)) {
                         choice = player.hp <= 0 ? 'hp' : 'hp2';
                     }
-                    else if (num > 0 && ((player.hp === player.maxHp) !== (player.hp2 === player.maxHp2))) {
-                        choice = (player.hp2 === player.maxHp2) ? 'hp' : 'hp2';
+                    else if (num > 0 && ((player.hp === player.maxHp) !== (player.hp2 === player.maxHp))) {
+                        choice = (player.hp2 === player.maxHp) ? 'hp' : 'hp2';
                     }
                     else {
                         let index = await player.chooseControl('主武将牌', '副武将牌').set('ai', () => {
@@ -40060,39 +40366,6 @@ const packs = function () {
             }
             await event.trigger('changeHp');
         };
-        lib.element.content.loseMaxHp = async function (event, trigger, player) {
-            const num = event.num;
-            let choice = 'maxHp';
-            if (typeof player.maxHp2 === 'number') {
-                let index = await player.chooseControl('主武将牌', '副武将牌').set('ai', () => {
-                    const player = get.player();
-                    return player.maxHp > player.maxHp2 ? 0 : 1;
-                }).set('prompt', `请选择一张武将牌-${num}体力上限`).forResult('index');
-                choice = (index === 0) ? 'maxHp' : 'maxHp2';
-            }
-            event.choice = choice;
-            game.log(player, `减少了${get.cnNumber(num)}点体力上限`);
-            player[choice] -= num;
-            if (isNaN(player[choice])) player[choice] = 0;
-            event.loseHp = Math.max(0, player[choice === 'maxHp' ? 'hp' : 'hp2'] - player[choice]);
-            player.update();
-            if (player[choice] <= 0) await player.die(event);
-        };
-        lib.element.content.gainMaxHp = async function (event, trigger, player) {
-            const num = event.num;
-            let choice = 'maxHp';
-            if (typeof player.maxHp2 === 'number') {
-                let index = await player.chooseControl('主武将牌', '副武将牌').set('ai', () => {
-                    const player = get.player();
-                    return player.maxHp <= player.maxHp2 ? 0 : 1;
-                }).set('prompt', `请选择一张武将牌+${num}体力上限`).forResult('index');
-                choice = (index === 0) ? 'maxHp' : 'maxHp2';
-            }
-            event.choice = choice;
-            game.log(player, `增加了${get.cnNumber(num)}点体力上限`);
-            player[choice] += num;
-            player.update();
-        };
         const ori6 = ui.create.buttonPresets.character;
         ui.create.buttonPresets.character = function (item) {
             const node = ori6.apply(this, arguments);
@@ -40101,20 +40374,14 @@ const packs = function () {
                 func.apply(this, arguments);
                 const infoitem = lib.character[item2];
                 if (typeof infoitem?.hp2 === 'number' && node2.node.hp?.querySelector('.text')) {
-                    const { hp2, maxHp2 } = infoitem;
-                    node2.node.hp.querySelector('.text').textContent += `&${hp2}`;
-                    if (typeof maxHp2 === 'number' && maxHp2 !== hp2) {
-                        node2.node.hp.querySelector('.text').textContent += `/${maxHp2}`;
-                    }
+                    const { hp, maxHp, hp2 } = infoitem, goon = hp === maxHp;
+                    node2.node.hp.querySelector('.text').textContent = `${hp}&${hp2}${goon ? '' : `/${maxHp}`}`;
                 }
             };
             const infoitem = lib.character[item];
             if (typeof infoitem?.hp2 === 'number' && node.node.hp?.querySelector('.text')) {
-                const { hp2, maxHp2 } = infoitem;
-                node.node.hp.querySelector('.text').textContent += `&${hp2}`;
-                if (typeof maxHp2 === 'number' && maxHp2 !== hp2) {
-                    node.node.hp.querySelector('.text').textContent += `/${maxHp2}`;
-                }
+                const { hp, maxHp, hp2 } = infoitem, goon = hp === maxHp;
+                node.node.hp.querySelector('.text').textContent = `${hp}&${hp2}${goon ? '' : `/${maxHp}`}`;
             }
             return node;
         };
